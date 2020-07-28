@@ -43,6 +43,8 @@
 #include "agent/ncp_openthread.hpp"
 #include "common/logging.hpp"
 
+#include <unistd.h>
+
 namespace otbr {
 namespace ubus {
 
@@ -169,6 +171,49 @@ static const struct blobmsg_policy mgmtsetPolicy[MGMTSET_MAX] = {
 };
 
 static const struct ubus_method otbrMethods[] = {
+#if QSDK53
+    {"scan", &UbusServer::UbusScanHandler, 0, nullptr, 0},
+    {"channel", &UbusServer::UbusChannelHandler, 0, nullptr, 0},
+    {"setchannel", &UbusServer::UbusSetChannelHandler, 0, setChannelPolicy, ARRAY_SIZE(setChannelPolicy)},
+    {"networkname", &UbusServer::UbusNetworknameHandler, 0, nullptr, 0},
+    {"setnetworkname", &UbusServer::UbusSetNetworknameHandler, 0, setNetworknamePolicy,
+     ARRAY_SIZE(setNetworknamePolicy)},
+    {"state", &UbusServer::UbusStateHandler, 0, nullptr, 0},
+    {"panid", &UbusServer::UbusPanIdHandler, 0, nullptr, 0},
+    {"setpanid", &UbusServer::UbusSetPanIdHandler, 0, setPanIdPolicy, ARRAY_SIZE(setPanIdPolicy)},
+    {"rloc16", &UbusServer::UbusRloc16Handler, 0, nullptr, 0},
+    {"extpanid", &UbusServer::UbusExtPanIdHandler, 0, nullptr, 0},
+    {"setextpanid", &UbusServer::UbusSetExtPanIdHandler, 0, setExtPanIdPolicy, ARRAY_SIZE(setExtPanIdPolicy)},
+    {"masterkey", &UbusServer::UbusMasterkeyHandler, 0, nullptr, 0},
+    {"setmasterkey", &UbusServer::UbusSetMasterkeyHandler, 0, setMasterkeyPolicy, ARRAY_SIZE(setMasterkeyPolicy)},
+    {"pskc", &UbusServer::UbusPskcHandler, 0, nullptr, 0},
+    {"setpskc", &UbusServer::UbusSetPskcHandler, 0, setPskcPolicy, ARRAY_SIZE(setPskcPolicy)},
+    {"threadstart", &UbusServer::UbusThreadStartHandler, 0, nullptr, 0},
+    {"threadstop", &UbusServer::UbusThreadStopHandler, 0, nullptr, 0},
+    {"neighbor", &UbusServer::UbusNeighborHandler, 0, nullptr, 0},
+    {"parent", &UbusServer::UbusParentHandler, 0, nullptr, 0},
+    {"mode", &UbusServer::UbusModeHandler, 0, nullptr, 0},
+    {"setmode", &UbusServer::UbusSetModeHandler, 0, setModePolicy, ARRAY_SIZE(setModePolicy)},
+    {"leaderpartitionid", &UbusServer::UbusLeaderPartitionIdHandler, 0, nullptr, 0},
+    {"setleaderpartitionid", &UbusServer::UbusSetLeaderPartitionIdHandler, 0, setLeaderPartitionIdPolicy,
+     ARRAY_SIZE(setLeaderPartitionIdPolicy)},
+    {"leave", &UbusServer::UbusLeaveHandler, 0, nullptr, 0},
+    {"leaderdata", &UbusServer::UbusLeaderdataHandler, 0, nullptr, 0},
+    {"networkdata", &UbusServer::UbusNetworkdataHandler, 0, nullptr, 0},
+    {"commissionerstart", &UbusServer::UbusCommissionerStartHandler, 0, nullptr, 0},
+    {"joinernum", &UbusServer::UbusJoinerNumHandler, 0, nullptr, 0},
+    {"joinerremove", &UbusServer::UbusJoinerRemoveHandler, 0, nullptr, 0},
+    {"macfiltersetstate", &UbusServer::UbusMacfilterSetStateHandler, 0, macfilterSetStatePolicy,
+     ARRAY_SIZE(macfilterSetStatePolicy)},
+    {"macfilteradd", &UbusServer::UbusMacfilterAddHandler, 0, macfilterAddPolicy, ARRAY_SIZE(macfilterAddPolicy)},
+    {"macfilterremove", &UbusServer::UbusMacfilterRemoveHandler, 0, macfilterRemovePolicy,
+     ARRAY_SIZE(macfilterRemovePolicy)},
+    {"macfilterclear", &UbusServer::UbusMacfilterClearHandler, 0, nullptr, 0},
+    {"macfilterstate", &UbusServer::UbusMacfilterStateHandler, 0, nullptr, 0},
+    {"macfilteraddr", &UbusServer::UbusMacfilterAddrHandler, 0, nullptr, 0},
+    {"joineradd", &UbusServer::UbusJoinerAddHandler, 0, addJoinerPolicy, ARRAY_SIZE(addJoinerPolicy)},
+    {"mgmtset", &UbusServer::UbusMgmtsetHandler, 0, mgmtsetPolicy, ARRAY_SIZE(mgmtsetPolicy)},
+#else
     {"scan", &UbusServer::UbusScanHandler, 0, 0, nullptr, 0},
     {"channel", &UbusServer::UbusChannelHandler, 0, 0, nullptr, 0},
     {"setchannel", &UbusServer::UbusSetChannelHandler, 0, 0, setChannelPolicy, ARRAY_SIZE(setChannelPolicy)},
@@ -210,12 +255,17 @@ static const struct ubus_method otbrMethods[] = {
     {"macfilteraddr", &UbusServer::UbusMacfilterAddrHandler, 0, 0, nullptr, 0},
     {"joineradd", &UbusServer::UbusJoinerAddHandler, 0, 0, addJoinerPolicy, ARRAY_SIZE(addJoinerPolicy)},
     {"mgmtset", &UbusServer::UbusMgmtsetHandler, 0, 0, mgmtsetPolicy, ARRAY_SIZE(mgmtsetPolicy)},
+#endif
 };
 
 static struct ubus_object_type otbrObjType = {"otbr_prog", 0, otbrMethods, ARRAY_SIZE(otbrMethods)};
 
 static struct ubus_object otbr = {
+#if QSDK53
+    avl : {NULL, NULL, NULL, NULL, NULL, 0, 0, false},
+#else
     avl : {},
+#endif
     name : "otbr",
     id : 0,
     path : nullptr,
@@ -1681,10 +1731,18 @@ void UbusServer::UbusReconnTimerDetail(struct uloop_timeout *aTimeout)
     OT_UNUSED_VARIABLE(aTimeout);
 
     static struct uloop_timeout retry = {
+#if QSDK53
+        list : {NULL, NULL},
+#else
         list : {},
+#endif
         pending : false,
         cb : UbusReconnTimer,
+#if QSDK53
+        time : {0, 0},
+#else
         time : {},
+#endif
     };
     int time = 2;
 

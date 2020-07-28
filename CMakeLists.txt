@@ -111,6 +111,12 @@ if(OTBR_OPENWRT)
     )
 endif()
 
+if(OTBR_QSDK53)
+    target_compile_definitions(otbr-config INTERFACE
+        QSDK53=1
+    )
+endif()
+
 if(OTBR_UNSECURE_JOIN)
     target_compile_definitions(otbr-config INTERFACE
         OTBR_ENABLE_UNSECURE_JOIN=1

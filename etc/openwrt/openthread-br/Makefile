@@ -47,6 +47,9 @@ CMAKE_OPTIONS = \
 	-DOT_READLINE="" \
 	-DOTBR_OPENWRT=ON \
 	-DOT_POSIX_CONFIG_RCP_BUS=SPI
+ifdef CONFIG_TARGET_ipq806x
+CMAKE_OPTIONS += -DOTBR_QSDK53=ON
+endif
 
 define Package/openthread-br
 	SECTION := base
