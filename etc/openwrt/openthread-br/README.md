@@ -4,7 +4,15 @@
 
 This is for local development.
 
-### 1. Add OpenThread feed
+### 1. Download source code
+
+```
+$ git clone https://github.com/gl-inet/ot-br-posix.git
+$ cd ot-br-posix/
+$ git submodule update --init --recursive
+```
+
+### 2. Add OpenThread feed
 
 Assuming `OPENWRT_TOP_SRCDIR` is the root of openwrt sources.
 
@@ -15,7 +23,7 @@ cd "${OPENWRT_TOP_SRCDIR}"
 ./scripts/feeds install openthread-br
 ```
 
-### 2. Enable OpenThread Border Router
+### 3. Enable OpenThread Border Router
 
 OpenThread is not selected by default, so use menuconfig to select openthread-br (OpenThread Border Router).
 
@@ -29,7 +37,7 @@ In the configure window, use the Up and Down keys to move the cursor and the Lef
 2. Enable _openthread-br_ by moving the cursor to it and pressing **Y**.
 3. Select _Exit_ to exit.
 
-### 3. Build OpenThread Border Router
+### 4. Build OpenThread Border Router
 
 ```bash
 make package/openthread-br/compile
@@ -41,7 +49,7 @@ or to do a verbose make for debugging:
 make -j1 V=sc package/openthread-br/compile
 ```
 
-### 4. Install
+### 5. Install
 
 Copy the generated **ipk** file into OpenWRT, and install with **opkg**.
 
