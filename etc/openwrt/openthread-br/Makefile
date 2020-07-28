@@ -45,13 +45,14 @@ CMAKE_OPTIONS = \
 	-DCMAKE_INSTALL_PREFIX=/usr \
 	-DOTBR_MDNS=OFF \
 	-DOT_READLINE="" \
-	-DOTBR_OPENWRT=ON
+	-DOTBR_OPENWRT=ON \
+	-DOT_POSIX_CONFIG_RCP_BUS=SPI
 
 define Package/openthread-br
 	SECTION := base
 	CATEGORY := Network
 	TITLE := OpenThread Border Router
-	DEPENDS := +libstdcpp +libjson-c +libubus +libblobmsg-json
+	DEPENDS := +libstdcpp +libjson-c +libubus +libblobmsg-json +kmod-spi-dev +kmod-tun
 endef
 
 define Package/openthread-br/description
