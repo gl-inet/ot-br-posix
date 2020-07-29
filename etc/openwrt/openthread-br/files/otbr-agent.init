@@ -1,0 +1,25 @@
+#!/bin/sh /etc/rc.common
+# Copyright © 2020 GL.iNet. All Rights Reserved.
+
+START=90
+
+USE_PROCD=1
+
+start_service() {
+    local NCP_SPI_DEVICE NCP_CHIP_SELECT_GPIO NCP_HOST_INT_GPIO NCP_RESET_GPIO NCP_WAKE_GPIO
+
+    NCP_SPI_DEVICE="/dev/spidev1.0"
+    NCP_CHIP_SELECT_GPIO=45
+    NCP_HOST_INT_GPIO=42
+    NCP_RESET_GPIO=49
+    NCP_WAKE_GPIO=40
+
+    [ ! -e "/sys/class/gpio/gpio$NCP_CHIP_SELECT_GPIO" ] && {
+        echo $NCP_CHIP_SELECT_GPIO > /sys/class/gpio/export
+        echo out > /sys/class/gpio/gpio$NCP_CHIP_SELECT_GPIO/direction
+    }
+
+    procd_open_instance
+    procd_set_param command /usr/sbin/otbr-agent -I wpan0 "spinel+spi://$NCP_SPI_DEVICE?gpio-int-device=/dev/gpiochip0&gpio-int-line=$NCP_HOST_INT_GPIO&gpio-reset-device=/dev/gpiochip0&gpio-reset-line=$NCP_RESET_GPIO&no-reset=1&spi-speed=1000000"
+    procd_close_instance
+}
