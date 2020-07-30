@@ -46,16 +46,18 @@ CMAKE_OPTIONS = \
 	-DOTBR_MDNS=OFF \
 	-DOT_READLINE="" \
 	-DOTBR_OPENWRT=ON \
-	-DOT_POSIX_CONFIG_RCP_BUS=SPI
+	-DOT_POSIX_CONFIG_RCP_BUS=SPI \
+	-DOTBR_WEB=ON
 ifdef CONFIG_TARGET_ipq806x
 CMAKE_OPTIONS += -DOTBR_QSDK53=ON
+TARGET_CFLAGS += -D_GLIBCXX_USE_C99=1
 endif
 
 define Package/openthread-br
 	SECTION := base
 	CATEGORY := Network
 	TITLE := OpenThread Border Router
-	DEPENDS := +libstdcpp +libjson-c +libubus +libblobmsg-json +kmod-spi-dev +kmod-tun +librt
+	DEPENDS := +libstdcpp +libjson-c +libubus +libblobmsg-json +kmod-spi-dev +kmod-tun +librt +jsoncpp +boost +boost-filesystem +boost-system
 endef
 
 define Package/openthread-br/description
@@ -65,6 +67,7 @@ endef
 define Package/openthread-br/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/otbr-agent $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/otbr-web $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/ot-ctl $(1)/usr/sbin
 
 	$(INSTALL_DIR) $(1)/etc/init.d
@@ -78,6 +81,9 @@ define Package/openthread-br/install
 
 	$(INSTALL_DIR) $(1)/www/luci-static/resources
 	$(CP) $(LOCAL_SOURCE_DIR)/src/openwrt/handle_error.js $(1)/www/luci-static/resources
+
+	$(INSTALL_DIR) $(1)/usr/share/otbr-web
+	$(CP) $(PKG_INSTALL_DIR)/usr/share/otbr-web/* $(1)/usr/share/otbr-web/
 endef
 
 $(eval $(call BuildPackage,openthread-br))
