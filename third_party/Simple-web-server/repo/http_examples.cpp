@@ -31,7 +31,7 @@ int main() {
     //Unless you do more heavy non-threaded processing in the resources,
     //1 thread is usually faster than several threads
     HttpServer server;
-    server.config.port=80;
+    server.config.port=8080;
     
     //Add resources using path-regex and method-string, and an anonymous function
     //POST-example for the path /string, responds the posted string
@@ -89,28 +89,17 @@ int main() {
     
     //GET-example for the path /match/[number], responds with the matched string in path (number)
     //For instance a request GET /match/123 will receive: 123
-    server.resource["^/match/([0-9]+)$"]["GET"]=[&server](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
+    server.resource["^/match/([0-9]+)$"]["GET"]=[](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
         string number=request->path_match[1];
         *response << "HTTP/1.1 200 OK\r\nContent-Length: " << number.length() << "\r\n\r\n" << number;
     };
     
     //Get example simulating heavy work in a separate thread
-    server.resource["^/work$"]["GET"]=[&server](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> /*request*/) {
+    server.resource["^/work$"]["GET"]=[](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> /*request*/) {
         thread work_thread([response] {
             this_thread::sleep_for(chrono::seconds(5));
             string message="Work done";
             *response << "HTTP/1.1 200 OK\r\nContent-Length: " << message.length() << "\r\n\r\n" << message;
-        });
-        work_thread.detach();
-    };
-
-    server.resource["^/getAvailableNetwork$"]["GET"]=[&server](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> /*request*/) {
-        thread work_thread([response] {
-            this_thread::sleep_for(chrono::seconds(5));
-            // string message="Work done";
-            string json_string="{\"result\":[{\"ch\":13,\"ha\":\"18B43000003D2785\",\"nn\":\"NEST-PAN-C1E7\",\"pi\":\"0xC19B\",\"xp\":\"EEA74CE1EDFA2E8A\"}]}";
-            // string json_string="{\"firstName\": \"John\",\"lastName\": \"Smith\",\"age\": 25}";
-            *response << "HTTP/1.1 200 OK\r\nContent-Length: " << json_string.length() << "\r\nContent-Type:application/json; charset=utf-8" << "\r\n\r\n" << json_string;
         });
         work_thread.detach();
     };
@@ -129,8 +118,6 @@ int main() {
                 throw invalid_argument("path must be within root path");
             if(boost::filesystem::is_directory(path))
                 path/="index.html";
-            if(!(boost::filesystem::exists(path) && boost::filesystem::is_regular_file(path)))
-                throw invalid_argument("file does not exist");
 
             std::string cache_control, etag;
 
@@ -184,17 +171,17 @@ int main() {
     //Wait for server to start so that the client can connect
     this_thread::sleep_for(chrono::seconds(1));
     
-    // //Client examples
-    // HttpClient client("localhost:8080");
-    // auto r1=client.request("GET", "/match/123");
-    // cout << r1->content.rdbuf() << endl;
+    //Client examples
+    HttpClient client("localhost:8080");
+    auto r1=client.request("GET", "/match/123");
+    cout << r1->content.rdbuf() << endl;
 
-    // string json_string="{\"firstName\": \"John\",\"lastName\": \"Smith\",\"age\": 25}";
-    // auto r2=client.request("POST", "/string", json_string);
-    // cout << r2->content.rdbuf() << endl;
+    string json_string="{\"firstName\": \"John\",\"lastName\": \"Smith\",\"age\": 25}";
+    auto r2=client.request("POST", "/string", json_string);
+    cout << r2->content.rdbuf() << endl;
     
-    // auto r3=client.request("POST", "/json", json_string);
-    // cout << r3->content.rdbuf() << endl;
+    auto r3=client.request("POST", "/json", json_string);
+    cout << r3->content.rdbuf() << endl;
     
     server_thread.join();
     
