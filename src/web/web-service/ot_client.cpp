@@ -40,6 +40,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include <sys/select.h>
 
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
