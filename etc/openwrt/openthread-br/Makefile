@@ -72,6 +72,7 @@ define Package/openthread-br/install
 
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(CP) ./files/otbr-agent.init $(1)/etc/init.d/otbr-agent
+	$(CP) ./files/otbr-web.init $(1)/etc/init.d/otbr-web
 
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller/admin
 	$(INSTALL_BIN) $(LOCAL_SOURCE_DIR)/src/openwrt/controller/thread.lua $(1)/usr/lib/lua/luci/controller/admin
