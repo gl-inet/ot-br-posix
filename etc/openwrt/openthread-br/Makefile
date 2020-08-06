@@ -69,6 +69,8 @@ define Package/openthread-br/install
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/otbr-agent $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/otbr-web $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/ot-ctl $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/tools/pskc $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/tools/steering-data $(1)/usr/sbin
 
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(CP) ./files/otbr-agent.init $(1)/etc/init.d/otbr-agent
