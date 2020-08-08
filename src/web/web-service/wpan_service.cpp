@@ -142,6 +142,7 @@ std::string WpanService::HandleFormNetworkRequest(const std::string &aFormReques
         prefix += "/64";
     }
 
+    VerifyOrExit(client.Execute("thread stop") != nullptr, ret = kWpanStatus_FormFailed);
     VerifyOrExit(client.FactoryReset(), ret = kWpanStatus_LeaveFailed);
     VerifyOrExit(client.Execute("masterkey %s", networkKey.c_str()) != nullptr, ret = kWpanStatus_SetFailed);
     VerifyOrExit(client.Execute("networkname %s", networkName.c_str()) != nullptr, ret = kWpanStatus_SetFailed);
@@ -416,6 +417,7 @@ std::string WpanService::HandleCommission(const std::string &aCommissionRequest)
 {
     Json::Value  root;
     Json::Reader reader;
+    Json::FastWriter jsonWriter;
     int          ret = kWpanStatus_Ok;
     std::string  pskd;
     std::string  response;
@@ -428,7 +430,7 @@ std::string WpanService::HandleCommission(const std::string &aCommissionRequest)
 
         VerifyOrExit(client.Connect(), ret = kWpanStatus_Uninitialized);
         rval = client.Execute("commissioner start");
-        VerifyOrExit(rval != nullptr, ret = kWpanStatus_Down);
+        // VerifyOrExit(rval != nullptr, ret = kWpanStatus_Down); // No need to check, repeated execution of the command will definitely fail. 
         rval = client.Execute("commissioner joiner add * %s", pskd.c_str());
         VerifyOrExit(rval != nullptr, ret = kWpanStatus_Down);
         root["error"] = ret;
@@ -439,6 +441,8 @@ exit:
         root["result"] = WPAN_RESPONSE_FAILURE;
         otbrLog(OTBR_LOG_ERR, "error: %d", ret);
     }
+
+    response = jsonWriter.write(root);
     return response;
 }
 
