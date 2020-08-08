@@ -25,6 +25,7 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
+add_definitions(-D_GLIBCXX_USE_C99)
 
 add_executable(otbr-web
     main.cpp
