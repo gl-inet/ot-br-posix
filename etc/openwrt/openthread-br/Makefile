@@ -76,14 +76,14 @@ define Package/openthread-br/install
 	$(CP) ./files/otbr-agent.init $(1)/etc/init.d/otbr-agent
 	$(CP) ./files/otbr-web.init $(1)/etc/init.d/otbr-web
 
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller/admin
-	$(INSTALL_BIN) $(LOCAL_SOURCE_DIR)/src/openwrt/controller/thread.lua $(1)/usr/lib/lua/luci/controller/admin
+	# $(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller/admin
+	# $(INSTALL_BIN) $(LOCAL_SOURCE_DIR)/src/openwrt/controller/thread.lua $(1)/usr/lib/lua/luci/controller/admin
 
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view
-	$(CP) $(LOCAL_SOURCE_DIR)/src/openwrt/view/admin_thread $(1)/usr/lib/lua/luci/view
+	# $(INSTALL_DIR) $(1)/usr/lib/lua/luci/view
+	# $(CP) $(LOCAL_SOURCE_DIR)/src/openwrt/view/admin_thread $(1)/usr/lib/lua/luci/view
 
-	$(INSTALL_DIR) $(1)/www/luci-static/resources
-	$(CP) $(LOCAL_SOURCE_DIR)/src/openwrt/handle_error.js $(1)/www/luci-static/resources
+	# $(INSTALL_DIR) $(1)/www/luci-static/resources
+	# $(CP) $(LOCAL_SOURCE_DIR)/src/openwrt/handle_error.js $(1)/www/luci-static/resources
 
 	$(INSTALL_DIR) $(1)/usr/share/otbr-web
 	$(CP) $(PKG_INSTALL_DIR)/usr/share/otbr-web/* $(1)/usr/share/otbr-web/
