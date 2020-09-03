@@ -34,6 +34,7 @@
 #include "web/web-service/wpan_service.hpp"
 
 #include <inttypes.h>
+#include <uci.h>
 
 #include "common/byteswap.hpp"
 #include "common/code_utils.hpp"
@@ -164,6 +165,47 @@ exit:
     {
         otbrLog(OTBR_LOG_ERR, "wpan service error: %d", ret);
         root["result"] = WPAN_RESPONSE_FAILURE;
+    } else {
+        struct uci_context* ctx = uci_alloc_context();
+        struct uci_ptr ptr;
+        char buff[128] = {0};
+
+        sprintf(buff, "otbr.configs=service");
+        if (uci_lookup_ptr(ctx, &ptr, buff, true) == UCI_OK) {
+            uci_set(ctx, &ptr);
+            uci_save(ctx, ptr.p);
+        }
+        sprintf(buff, "otbr.configs.networkname=%s", networkName.c_str());
+        if (uci_lookup_ptr(ctx, &ptr, buff, true) == UCI_OK) {
+            uci_set(ctx, &ptr);
+            uci_save(ctx, ptr.p);
+        }
+        sprintf(buff, "otbr.configs.extpanid=%s", extPanId.c_str());
+        if (uci_lookup_ptr(ctx, &ptr, buff, true) == UCI_OK) {
+            uci_set(ctx, &ptr);
+            uci_save(ctx, ptr.p);
+        }
+        sprintf(buff, "otbr.configs.panid=%s", panId.c_str());
+        if (uci_lookup_ptr(ctx, &ptr, buff, true) == UCI_OK) {
+            uci_set(ctx, &ptr);
+            uci_save(ctx, ptr.p);
+        }
+        sprintf(buff, "otbr.configs.passphrase=%s", passphrase.c_str());
+        if (uci_lookup_ptr(ctx, &ptr, buff, true) == UCI_OK) {
+            uci_set(ctx, &ptr);
+            uci_save(ctx, ptr.p);
+        }
+        sprintf(buff, "otbr.configs.masterkey=%s", masterKey.c_str());
+        if (uci_lookup_ptr(ctx, &ptr, buff, true) == UCI_OK) {
+            uci_set(ctx, &ptr);
+            uci_save(ctx, ptr.p);
+        }
+        sprintf(buff, "otbr");
+        if (uci_lookup_ptr(ctx, &ptr, buff, true) == UCI_OK) {
+            uci_commit(ctx, &ptr.p, false);
+        }        
+
+        uci_free_context(ctx);
     }
     response = jsonWriter.write(root);
     return response;

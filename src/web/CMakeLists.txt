@@ -56,6 +56,7 @@ target_link_libraries(otbr-web PRIVATE
     mbedtls
     ${Boost_LIBRARIES}
     pthread
+    uci
 )
 install(
     TARGETS otbr-web
