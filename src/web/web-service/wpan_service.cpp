@@ -112,12 +112,12 @@ std::string WpanService::HandleFormNetworkRequest(const std::string &aFormReques
     uint8_t                     extPanIdBytes[OT_EXTENDED_PANID_LENGTH];
     std::string                 masterKey;
     std::string                 prefix;
-    uint16_t                    channel;
+    uint16_t                    channel = 0;
     std::string                 networkName;
     std::string                 passphrase;
     std::string                 panId;
     std::string                 extPanId;
-    bool                        defaultRoute;
+    bool                        defaultRoute = false;
     int                         ret = kWpanStatus_Ok;
     otbr::Web::OpenThreadClient client;
 
@@ -200,10 +200,25 @@ exit:
             uci_set(ctx, &ptr);
             uci_save(ctx, ptr.p);
         }
+        sprintf(buff, "otbr.configs.channel=%d", channel);
+        if (uci_lookup_ptr(ctx, &ptr, buff, true) == UCI_OK) {
+            uci_set(ctx, &ptr);
+            uci_save(ctx, ptr.p);
+        }
+        sprintf(buff, "otbr.configs.prefix=%s", prefix.c_str());
+        if (uci_lookup_ptr(ctx, &ptr, buff, true) == UCI_OK) {
+            uci_set(ctx, &ptr);
+            uci_save(ctx, ptr.p);
+        }
+        sprintf(buff, "otbr.configs.defaultRoute=%s", (defaultRoute ? "r" : ""));
+        if (uci_lookup_ptr(ctx, &ptr, buff, true) == UCI_OK) {
+            uci_set(ctx, &ptr);
+            uci_save(ctx, ptr.p);
+        }
         sprintf(buff, "otbr");
         if (uci_lookup_ptr(ctx, &ptr, buff, true) == UCI_OK) {
             uci_commit(ctx, &ptr.p, false);
-        }        
+        }
 
         uci_free_context(ctx);
     }
