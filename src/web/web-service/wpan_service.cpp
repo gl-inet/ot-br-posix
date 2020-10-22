@@ -146,14 +146,15 @@ std::string WpanService::HandleFormNetworkRequest(const std::string &aFormReques
         prefix += "/64";
     }
 
-    VerifyOrExit(client.Execute("thread stop") != nullptr, ret = kWpanStatus_FormFailed);
+    // VerifyOrExit(client.Execute("thread stop") != nullptr, ret = kWpanStatus_FormFailed);
     VerifyOrExit(client.FactoryReset(), ret = kWpanStatus_LeaveFailed);
-    VerifyOrExit(client.Execute("masterkey %s", masterKey.c_str()) != nullptr, ret = kWpanStatus_SetFailed);
-    VerifyOrExit(client.Execute("networkname %s", networkName.c_str()) != nullptr, ret = kWpanStatus_SetFailed);
-    VerifyOrExit(client.Execute("channel %u", channel) != nullptr, ret = kWpanStatus_SetFailed);
-    VerifyOrExit(client.Execute("extpanid %s", extPanId.c_str()) != nullptr, ret = kWpanStatus_SetFailed);
-    VerifyOrExit(client.Execute("panid %s", panId.c_str()) != nullptr, ret = kWpanStatus_SetFailed);
-    VerifyOrExit(client.Execute("pskc %s", pskcStr) != nullptr, ret = kWpanStatus_SetFailed);
+    VerifyOrExit(client.Execute("dataset masterkey %s", masterKey.c_str()) != nullptr, ret = kWpanStatus_SetFailed);
+    VerifyOrExit(client.Execute("dataset networkname %s", networkName.c_str()) != nullptr, ret = kWpanStatus_SetFailed);
+    VerifyOrExit(client.Execute("dataset channel %u", channel) != nullptr, ret = kWpanStatus_SetFailed);
+    VerifyOrExit(client.Execute("dataset extpanid %s", extPanId.c_str()) != nullptr, ret = kWpanStatus_SetFailed);
+    VerifyOrExit(client.Execute("dataset panid %s", panId.c_str()) != nullptr, ret = kWpanStatus_SetFailed);
+    VerifyOrExit(client.Execute("dataset pskc %s", pskcStr) != nullptr, ret = kWpanStatus_SetFailed);
+    VerifyOrExit(client.Execute("dataset commit active") != nullptr, ret = kWpanStatus_SetFailed);
     VerifyOrExit(client.Execute("ifconfig up") != nullptr, ret = kWpanStatus_FormFailed);
     VerifyOrExit(client.Execute("thread start") != nullptr, ret = kWpanStatus_FormFailed);
     VerifyOrExit(client.Execute("prefix add %s paso%s", prefix.c_str(), (defaultRoute ? "r" : "")) != nullptr,
