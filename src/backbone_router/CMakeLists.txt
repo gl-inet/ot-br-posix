@@ -1,6 +1,5 @@
-#!/bin/bash
 #
-#  Copyright (c) 2017, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -27,40 +26,13 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set -e
-set -x
+add_library(otbr-backbone-router
+    backbone_agent.cpp
+    nd_proxy.cpp
+)
 
-export PATH=/usr/local/bin:$PATH
-
-case $BUILD_TARGET in
-    meshcop)
-        ./script/bootstrap
-        ./script/test build
-
-        OT_CLI="ot-cli-mtd" ./script/test meshcop
-        OT_CLI="ot-cli-ftd" ./script/test meshcop
-        OTBR_USE_WEB_COMMISSIONER=1 ./script/test meshcop
-        ;;
-
-    openwrt-check)
-        ./script/test openwrt
-        ;;
-
-    docker-check)
-        .travis/check-docker
-        ;;
-
-    otbr-dbus-check)
-        .travis/check-otbr-dbus
-        ;;
-
-    macOS)
-        # On Travis, brew install fails when a package is already installed, so use reinstall here instead of ./script/bootstrap
-        brew unlink python@2 || true
-        brew reinstall boost cmake cpputest dbus jsoncpp ninja
-        OTBR_OPTIONS='-DOTBR_MDNS=OFF' ./script/test build
-        ;;
-    *)
-        false
-        ;;
-esac
+target_link_libraries(otbr-backbone-router PRIVATE
+    otbr-common
+    otbr-utils
+    netfilter_queue
+)

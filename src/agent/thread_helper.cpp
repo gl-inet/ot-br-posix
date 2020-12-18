@@ -45,6 +45,7 @@
 #include "common/byteswap.hpp"
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
+#include "common/region_code.hpp"
 
 namespace otbr {
 namespace agent {
@@ -186,6 +187,8 @@ void ThreadHelper::Attach(const std::string &         aNetworkName,
     otExtendedPanId extPanId;
     otMasterKey     masterKey;
     otPskc          pskc;
+    uint32_t        preferredChannelMask = GetPreferredChannelMaskForRegion(mNcp->GetRegionCode());
+    uint32_t        supportedChannelMask = GetSupportedChannelMaskForRegion(mNcp->GetRegionCode());
     uint32_t        channelMask;
     uint8_t         channel;
 
@@ -207,7 +210,9 @@ void ThreadHelper::Attach(const std::string &         aNetworkName,
     }
     else
     {
-        while (aExtPanId != UINT64_MAX)
+        *reinterpret_cast<uint64_t *>(&extPanId) = UINT64_MAX;
+
+        while (*reinterpret_cast<uint64_t *>(&extPanId) == UINT64_MAX)
         {
             RandomFill(extPanId.m8, sizeof(extPanId.m8));
         }
@@ -241,11 +246,11 @@ void ThreadHelper::Attach(const std::string &         aNetworkName,
     SuccessOrExit(error = otThreadSetExtendedPanId(mInstance, &extPanId));
     SuccessOrExit(error = otThreadSetMasterKey(mInstance, &masterKey));
 
-    channelMask = otPlatRadioGetPreferredChannelMask(mInstance) & aChannelMask;
+    channelMask = otLinkGetSupportedChannelMask(mInstance) & preferredChannelMask & aChannelMask;
 
     if (channelMask == 0)
     {
-        channelMask = otLinkGetSupportedChannelMask(mInstance) & aChannelMask;
+        channelMask = otLinkGetSupportedChannelMask(mInstance) & supportedChannelMask & aChannelMask;
     }
     VerifyOrExit(channelMask != 0, otbrLog(OTBR_LOG_WARNING, "Invalid channel mask"), error = OT_ERROR_INVALID_ARGS);
 

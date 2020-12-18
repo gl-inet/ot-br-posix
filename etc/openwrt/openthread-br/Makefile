@@ -33,8 +33,8 @@ include $(TOPDIR)/rules.mk
 PKG_NAME := openthread-br
 PKG_LICENSE := BSD-3-Clause
 PKG_LICENSE_FILES := LICENSE
-PKG_RELEASE := 1
-PKG_VERSION := 1.0.3
+PKG_RELEASE := 5
+PKG_VERSION := 0.2.0
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/cmake.mk

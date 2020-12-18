@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <openthread/backbone_router_ftd.h>
 #include <openthread/cli.h>
 #include <openthread/dataset.h>
 #include <openthread/logging.h>
@@ -58,6 +59,11 @@ using std::chrono::steady_clock;
 
 namespace otbr {
 namespace Ncp {
+
+const otCliCommand ControllerOpenThread::sRegionCommand = {
+    "region",
+    &ControllerOpenThread::HandleRegionCommand,
+};
 
 ControllerOpenThread::ControllerOpenThread(const char *aInterfaceName,
                                            const char *aRadioUrl,
@@ -122,7 +128,14 @@ otbrError ControllerOpenThread::Init(void)
         VerifyOrExit(result == OT_ERROR_NONE, error = OTBR_ERROR_OPENTHREAD);
     }
 
+#if OTBR_ENABLE_BACKBONE_ROUTER
+    otBackboneRouterSetDomainPrefixCallback(mInstance, &ControllerOpenThread::HandleBackboneRouterDomainPrefixEvent,
+                                            this);
+    otBackboneRouterSetNdProxyCallback(mInstance, &ControllerOpenThread::HandleBackboneRouterNdProxyEvent, this);
+#endif
+
     mThreadHelper = std::unique_ptr<otbr::agent::ThreadHelper>(new otbr::agent::ThreadHelper(mInstance, this));
+    otCliSetUserCommands(&sRegionCommand, 1, this);
 
 exit:
     return error;
@@ -165,6 +178,13 @@ void ControllerOpenThread::HandleStateChanged(otChangedFlags aFlags)
 
         EventEmitter::Emit(kEventThreadState, attached);
     }
+
+#if OTBR_ENABLE_BACKBONE_ROUTER
+    if (aFlags & OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE)
+    {
+        EventEmitter::Emit(kEventBackboneRouterState);
+    }
+#endif
 
     mThreadHelper->StateChangedCallback(aFlags);
 }
@@ -228,6 +248,8 @@ void ControllerOpenThread::Process(const otSysMainloopContext &aMainloop)
 
 void ControllerOpenThread::Reset(void)
 {
+    gPlatResetReason = OT_PLAT_RESET_REASON_SOFTWARE;
+
     otInstanceFinalize(mInstance);
     otSysDeinit();
     Init();
@@ -235,7 +257,8 @@ void ControllerOpenThread::Reset(void)
     {
         handler();
     }
-    sReset = false;
+    mTriedAttach = false;
+    sReset       = false;
 }
 
 bool ControllerOpenThread::IsResetRequested(void)
@@ -306,6 +329,64 @@ void ControllerOpenThread::RegisterResetHandler(std::function<void(void)> aHandl
     mResetHandlers.emplace_back(std::move(aHandler));
 }
 
+void ControllerOpenThread::HandleRegionCommand(void *aContext, uint8_t aArgLength, char **aArgs)
+{
+    ControllerOpenThread *controller = static_cast<ControllerOpenThread *>(aContext);
+    controller->HandleRegionCommand(aArgLength, aArgs);
+}
+
+void ControllerOpenThread::HandleRegionCommand(uint8_t aArgLength, char **aArgs)
+{
+    if (aArgLength == 0)
+    {
+        otCliOutputFormat("%s\nDone\n", mRegionCode.c_str());
+    }
+    else if (aArgLength == 1)
+    {
+        if (strnlen(aArgs[0], 3) == 2)
+        {
+            mRegionCode = aArgs[0];
+            otCliOutputFormat("Done\n");
+        }
+        else
+        {
+            otCliOutputFormat("Error: InvalidArgs\n");
+        }
+    }
+    else
+    {
+        otCliOutputFormat("Error: InvalidArgs\n");
+    }
+}
+
+#if OTBR_ENABLE_BACKBONE_ROUTER
+void ControllerOpenThread::HandleBackboneRouterDomainPrefixEvent(void *                            aContext,
+                                                                 otBackboneRouterDomainPrefixEvent aEvent,
+                                                                 const otIp6Prefix *               aDomainPrefix)
+{
+    static_cast<ControllerOpenThread *>(aContext)->HandleBackboneRouterDomainPrefixEvent(aEvent, aDomainPrefix);
+}
+
+void ControllerOpenThread::HandleBackboneRouterDomainPrefixEvent(otBackboneRouterDomainPrefixEvent aEvent,
+                                                                 const otIp6Prefix *               aDomainPrefix)
+{
+    EventEmitter::Emit(kEventBackboneRouterDomainPrefixEvent, aEvent, aDomainPrefix);
+}
+
+void ControllerOpenThread::HandleBackboneRouterNdProxyEvent(void *                       aContext,
+                                                            otBackboneRouterNdProxyEvent aEvent,
+                                                            const otIp6Address *         aAddress)
+{
+    static_cast<ControllerOpenThread *>(aContext)->HandleBackboneRouterNdProxyEvent(aEvent, aAddress);
+}
+
+void ControllerOpenThread::HandleBackboneRouterNdProxyEvent(otBackboneRouterNdProxyEvent aEvent,
+                                                            const otIp6Address *         aAddress)
+{
+    EventEmitter::Emit(kEventBackboneRouterNdProxyEvent, aEvent, aAddress);
+}
+#endif
+
 Controller *Controller::Create(const char *aInterfaceName, const char *aRadioUrl, const char *aBackboneInterfaceName)
 {
     return new ControllerOpenThread(aInterfaceName, aRadioUrl, aBackboneInterfaceName);
@@ -357,5 +438,6 @@ extern "C" void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const ch
 void otPlatReset(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     sReset = true;
 }

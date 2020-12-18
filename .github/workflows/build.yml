@@ -33,7 +33,7 @@ on: [push, pull_request]
 jobs:
 
   cancel-previous-runs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - uses: rokroskar/workflow-run-cleanup-action@master
       env:
@@ -45,12 +45,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
-      run: sudo BUILD_TARGET=pretty-check tests/scripts/bootstrap.sh
+      run: BUILD_TARGET=pretty-check tests/scripts/bootstrap.sh
     - name: Check
       run: script/make-pretty check
 
   android-check:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         mdns: ["mDNSResponder", ""]
@@ -67,7 +67,7 @@ jobs:
          ot-br-posix/tests/scripts/check-android-build"
 
   check:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         mdns: ["mDNSResponder", "avahi"]
@@ -87,7 +87,7 @@ jobs:
       uses: codecov/codecov-action@v1
 
   rest-check:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         rest: ["rest-off", ""]
@@ -107,7 +107,7 @@ jobs:
       uses: codecov/codecov-action@v1
 
   script-check:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       BUILD_TARGET: script-check
       OTBR_COVERAGE: 1
@@ -123,7 +123,7 @@ jobs:
       uses: codecov/codecov-action@v1
 
   scan-build:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       BUILD_TARGET: scan-build
       CC: clang
@@ -154,7 +154,7 @@ jobs:
       run: script/test package
 
   thread-1-2-backbone:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       PACKET_VERIFICATION: 1
       REFERENCE_DEVICE: 1
@@ -169,9 +169,14 @@ jobs:
           submodules: true
       - name: Build OTBR Docker Image
         run: |
-          otbr_options="-DOTBR_BACKBONE_ROUTER=ON -DOT_DUA=ON -DOT_MLR=ON -DOTBR_COVERAGE=ON"
+          otbr_options="-DOT_DUA=ON -DOT_MLR=ON -DOTBR_COVERAGE=ON"
           otbr_image_name="otbr-ot12-backbone-ci"
-          docker build -t "${otbr_image_name}" -f etc/docker/Dockerfile . --build-arg REFERENCE_DEVICE=1 --build-arg OT_BACKBONE_CI=1 --build-arg OTBR_OPTIONS="${otbr_options}"
+          docker build -t "${otbr_image_name}" -f etc/docker/Dockerfile . \
+            --build-arg BACKBONE_ROUTER=1 \
+            --build-arg REFERENCE_DEVICE=${REFERENCE_DEVICE} \
+            --build-arg OT_BACKBONE_CI=1 \
+            --build-arg NAT64=0 \
+            --build-arg OTBR_OPTIONS="${otbr_options}"
       - name: Bootstrap OpenThread Test
         run: |
           sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
